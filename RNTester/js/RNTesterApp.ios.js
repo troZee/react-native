@@ -27,9 +27,12 @@ const {
   Linking,
   Platform,
   SafeAreaView,
+  TouchableHighlight,
   StyleSheet,
+  Image,
   Text,
   useColorScheme,
+  Dimensions,
   View,
   LogBox,
 } = require('react-native');
@@ -46,173 +49,55 @@ LogBox.ignoreLogs(['Module RCTImagePickerManager requires main queue setup']);
 
 const APP_STATE_KEY = 'RNTesterAppState.v2';
 
-const Header = ({
-  onBack,
-  title,
-}: {
-  onBack?: () => mixed,
-  title: string,
-  ...
-}) => (
-  <RNTesterThemeContext.Consumer>
-    {theme => {
-      return (
-        <SafeAreaView
-          style={[
-            styles.headerContainer,
-            {
-              borderBottomColor: theme.SeparatorColor,
-              backgroundColor: theme.TertiarySystemBackgroundColor,
-            },
-          ]}>
-          <View style={styles.header}>
-            <View style={styles.headerCenter}>
-              <Text style={{...styles.title, ...{color: theme.LabelColor}}}>
-                {title}
-              </Text>
-            </View>
-            {onBack && (
-              <View>
-                <Button
-                  title="Back"
-                  onPress={onBack}
-                  color={Platform.select({
-                    ios: theme.LinkColor,
-                    default: undefined,
-                  })}
-                />
-              </View>
-            )}
-          </View>
-        </SafeAreaView>
-      );
-    }}
-  </RNTesterThemeContext.Consumer>
-);
+import image0 from './assets/call.png';
+import image1 from './assets/dislike.png';
+import image2 from './assets/flowers.png';
+import image3 from './assets/hawk.png';
+import image4 from './assets/trees.jpg';
 
-const RNTesterExampleContainerViaHook = ({
-  onBack,
-  title,
-  module,
-}: {
-  onBack?: () => mixed,
-  title: string,
-  module: RNTesterExample,
-  ...
-}) => {
-  const colorScheme: ?ColorSchemeName = useColorScheme();
-  const theme = colorScheme === 'dark' ? themes.dark : themes.light;
-  return (
-    <RNTesterThemeContext.Provider value={theme}>
-      <View style={styles.exampleContainer}>
-        <Header onBack={onBack} title={title} />
-        <RNTesterExampleContainer module={module} />
-      </View>
-    </RNTesterThemeContext.Provider>
-  );
-};
-
-const RNTesterExampleListViaHook = ({
-  onNavigate,
-  list,
-}: {
-  onNavigate?: () => mixed,
-  list: {
-    ComponentExamples: Array<RNTesterExample>,
-    APIExamples: Array<RNTesterExample>,
-    ...
-  },
-  ...
-}) => {
-  const colorScheme: ?ColorSchemeName = useColorScheme();
-  const theme = colorScheme === 'dark' ? themes.dark : themes.light;
-  return (
-    <RNTesterThemeContext.Provider value={theme}>
-      <View style={styles.exampleContainer}>
-        <Header title="RNTester" />
-        <RNTesterExampleList onNavigate={onNavigate} list={list} />
-      </View>
-    </RNTesterThemeContext.Provider>
-  );
-};
-
+const images = [image0, image1, image2, image3, image4];
 class RNTesterApp extends React.Component<Props, RNTesterNavigationState> {
-  _mounted: boolean;
-
-  UNSAFE_componentWillMount() {
-    BackHandler.addEventListener('hardwareBackPress', this._handleBack);
-  }
-
-  componentDidMount() {
-    this._mounted = true;
-    Linking.getInitialURL().then(url => {
-      AsyncStorage.getItem(APP_STATE_KEY, (err, storedString) => {
-        if (!this._mounted) {
-          return;
-        }
-        const exampleAction = URIActionMap(
-          this.props.exampleFromAppetizeParams,
-        );
-        const urlAction = URIActionMap(url);
-        const launchAction = exampleAction || urlAction;
-        const initialAction = launchAction || {type: 'InitialAction'};
-        this.setState(RNTesterNavigationReducer(undefined, initialAction));
-      });
-    });
-
-    Linking.addEventListener('url', url => {
-      this._handleAction(URIActionMap(url));
-    });
-  }
-
-  componentWillUnmount() {
-    this._mounted = false;
-  }
-
-  _handleBack = () => {
-    this._handleAction(RNTesterActions.Back());
+  state = {
+    counter: 0,
   };
 
-  _handleAction = (action: ?RNTesterAction) => {
-    if (!action) {
-      return;
-    }
-    const newState = RNTesterNavigationReducer(this.state, action);
-    if (this.state !== newState) {
-      this.setState(newState, () =>
-        AsyncStorage.setItem(APP_STATE_KEY, JSON.stringify(this.state)),
-      );
-    }
+  increment = () => {
+    this.setState(prev => {
+      return {
+        counter: (prev.counter % (images.length - 1)) + 1,
+      };
+    });
   };
 
   render(): React.Node | null {
-    if (!this.state) {
-      return null;
-    }
-    if (this.state.openExample) {
-      const Component = RNTesterList.Modules[this.state.openExample];
-      if (Component && Component.external) {
-        return <Component onExampleExit={this._handleBack} />;
-      } else {
-        return (
-          <RNTesterExampleContainerViaHook
-            onBack={this._handleBack}
-            title={Component.title}
-            module={Component}
-          />
-        );
-      }
-    }
+    const imageSource = images[this.state.counter];
+
     return (
-      <RNTesterExampleListViaHook
-        onNavigate={this._handleAction}
-        list={RNTesterList}
-      />
+      <View>
+        <Image source={imageSource} style={styles.image} />
+        <TouchableHighlight onPress={this.increment} style={styles.highlight}>
+          <Text style={styles.text}>NEXT IMAGE</Text>
+        </TouchableHighlight>
+      </View>
     );
   }
 }
+const window = Dimensions.get('window');
 
 const styles = StyleSheet.create({
+  highlight: {
+    backgroundColor: 'yellow',
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+  },
+  text: {
+    fontSize: 50,
+  },
+  image: {
+    width: window.width,
+    height: window.height,
+  },
   headerContainer: {
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
