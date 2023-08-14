@@ -164,6 +164,11 @@ const APIs: Array<RNTesterModuleInfo> = ([
     category: 'UI',
   },
   {
+    key: 'FetchExample',
+    category: 'UI',
+    module: require('../examples/Fetch/FetchExample').default,
+  },
+  {
     key: 'AnimatedIndex',
     module: require('../examples/Animated/AnimatedIndex').default,
   },
